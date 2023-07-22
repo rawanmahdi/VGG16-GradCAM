@@ -1,9 +1,10 @@
 #%%
 import tensorflow as tf
 from tensorflow import keras
+from keras.callbacks import EarlyStopping
 from keras.applications.vgg16 import VGG16
 from keras.preprocessing.image import ImageDataGenerator
-from keras.layers import MaxPooling2D, Conv2D, Dense, Input, Flatten
+from keras.layers import MaxPooling2D, GlobalAveragePooling2D, Conv2D, Dense, Input, Flatten, Dropout
 from keras.engine import training
 import matplotlib.pyplot as plt
 #%%
@@ -14,10 +15,10 @@ base_model.summary()
 #%%
 # load train and test images using generator
 train_gen = ImageDataGenerator()
-datadir = 'C:/Users/Rawan Alamily/Downloads/McSCert Co-op/VGG16-GradCAM'
-train_data = train_gen.flow_from_directory(directory=datadir+'/reduced-cat-breed/TRAIN', target_size=(224,224), batch_size=256)
+datadir = 'C:/Users/Rawan Alamily/Downloads/McSCert Co-op/VGG16-GradCAM-data'
+train_data = train_gen.flow_from_directory(directory=datadir+'/2500-cat-breeds/TRAIN', target_size=(224,224), batch_size=64)
 test_gen = ImageDataGenerator()
-test_data = test_gen.flow_from_directory(directory=datadir+'/reduced-cat-breed/TEST', target_size=(224,224), batch_size=256)
+test_data = test_gen.flow_from_directory(directory=datadir+'/2500-cat-breeds/TEST', target_size=(224,224), batch_size=64)
 #%%
 # freeze conv layers of model below top layer - we dont want to update weights of the entire model
 base_model.trainable = False
@@ -76,9 +77,12 @@ x = Conv2D(
 )(x)
 x = MaxPooling2D((2, 2), strides=(2, 2), name="block5_pool")(x)
 # trainable layers
-x = (Flatten())(x)
+x = GlobalAveragePooling2D()(x)
+# x = (Flatten())(x)
 x = Dense(units=4096,activation="relu")(x)
+x = Dropout(rate=0.7)(x)
 x = Dense(units=4096,activation="relu")(x)
+x = Dropout(rate=0.7)(x)
 x = Dense(units=5)(x)
 
 model = training.Model(img_input, x, name="custom_vgg16")
@@ -103,11 +107,13 @@ model.compile(optimizer=keras.optimizers.Adam(learning_rate=base_learning_rate),
               metrics=['accuracy'])
 model.summary()
 #%%
-# fit new model !
+# fit new model!
+callback = EarlyStopping(monitor='loss', patience=3)
 history = model.fit(train_data, 
                     epochs=10,
-                    validation_data=test_data)
-#%%
+                    validation_data=test_data, 
+                    callbacks=callback)
+    #%%
 # plot learning curves
 acc = history.history['accuracy']
 val_acc = history.history['val_accuracy']
@@ -134,5 +140,5 @@ plt.title('Training and Validation Loss')
 plt.xlabel('epoch')
 plt.show()
 
-model.save(datadir+'/overfitted-model/saved_model4')
+model.save(datadir+'-data/saved_models/')
 # %%

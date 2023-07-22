@@ -67,11 +67,11 @@ def build_heatmap(model, img, predictedClass, layerName, classIdx=None,
   return heatmap
 
 #%%
-model_path = 'C:/Users/Rawan Alamily/Downloads/McSCert Co-op/VGG16-GradCAM/overfitted-model/saved_model3'
+model_path = 'C:/Users/Rawan Alamily/Downloads/McSCert Co-op/VGG16-GradCAM-data/saved_models/saved_model4'
 model = tf.keras.models.load_model(model_path)
 model.summary()
 #%%
-img_path = 'C:/Users/Rawan Alamily/Downloads/McSCert Co-op/VGG16-GradCAM/cat-breed/TEST/bengal/beautiful-goldencolored-bengal-cat-on-260nw-1727556838.jpg'
+img_path = 'C:/Users/Rawan Alamily/Downloads/McSCert Co-op/VGG16-GradCAM-data/reduced-cat-breed/TRAIN/bengal/portrait-bengal-kitten-cat-looking-260nw-1930915121.jpg'
 img = tf.keras.utils.load_img(img_path, target_size=(224,224))
 plt.imshow(img)
 
