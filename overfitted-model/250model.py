@@ -15,9 +15,9 @@ base_model.summary()
 # load train and test images using generator
 train_gen = ImageDataGenerator()
 datadir = 'C:/Users/Rawan Alamily/Downloads/McSCert Co-op/VGG16-GradCAM-data'
-train_data = train_gen.flow_from_directory(directory=datadir+'/50-cat-breeds/TRAIN', target_size=(224,224), batch_size=64)
+train_data = train_gen.flow_from_directory(directory=datadir+'/250-cat-breeds/TRAIN', target_size=(224,224), batch_size=64)
 test_gen = ImageDataGenerator()
-test_data = test_gen.flow_from_directory(directory=datadir+'/50-cat-breeds/TEST', target_size=(224,224), batch_size=64)
+test_data = test_gen.flow_from_directory(directory=datadir+'/250-cat-breeds/TEST', target_size=(224,224), batch_size=64)
 #%%
 # freeze conv layers of model below top layer - we dont want to update weights of the entire model
 base_model.trainable = False
@@ -96,7 +96,7 @@ def transfer_weights(src_model, trg_model, to_layer):
             break
     print(f'transfered weights from {src_model.name} to {trg_model.name}')
 
-transfer_weights(base_model, model, to_layer='block5_conv3')
+transfer_weights(base_model, model, to_layer='block5_pool')
 #%%
 # compile new model
 base_learning_rate = 0.0001
@@ -136,5 +136,5 @@ plt.title('Training and Validation Loss')
 plt.xlabel('epoch')
 plt.show()
 #%%
-model.save(datadir+'/saved_models/overfitted/81-sample-dropout-extralayer-97-56')
+model.save(datadir+'/saved_models/overfitted/250-sample-dropout-97-60')
 # %%
