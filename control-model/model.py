@@ -16,9 +16,9 @@ base_model.summary()
 # load train and test images using generator
 train_gen = ImageDataGenerator()
 datadir = 'C:/Users/Rawan Alamily/Downloads/McSCert Co-op/VGG16-GradCAM-data'
-train_data = train_gen.flow_from_directory(directory=datadir+'/2500-cat-breeds/TRAIN', target_size=(224,224), batch_size=64)
+train_data = train_gen.flow_from_directory(directory=datadir+'/2500-cat-breeds/TRAIN', target_size=(224,224), batch_size=128)
 test_gen = ImageDataGenerator()
-test_data = test_gen.flow_from_directory(directory=datadir+'/2500-cat-breeds/TEST', target_size=(224,224), batch_size=64)
+test_data = test_gen.flow_from_directory(directory=datadir+'/2500-cat-breeds/TEST', target_size=(224,224), batch_size=128)
 #%%
 # freeze conv layers of model below top layer - we dont want to update weights of the entire model
 base_model.trainable = False
@@ -80,9 +80,9 @@ x = MaxPooling2D((2, 2), strides=(2, 2), name="block5_pool")(x)
 x = GlobalAveragePooling2D()(x)
 # x = (Flatten())(x)
 x = Dense(units=4096,activation="relu")(x)
-x = Dropout(rate=0.7)(x)
+x = Dropout(rate=0.25)(x)
 x = Dense(units=4096,activation="relu")(x)
-x = Dropout(rate=0.7)(x)
+x = Dropout(rate=0.25)(x)
 x = Dense(units=5)(x)
 
 model = training.Model(img_input, x, name="custom_vgg16")
@@ -93,6 +93,7 @@ def transfer_weights(src_model, trg_model, to_layer):
     for trg_layer, src_layer in zip(trg_model.layers, src_model.layers):
         weights = src_layer.get_weights()
         trg_layer.set_weights(weights)
+        # freeze layers with transfered weights 
         trg_layer.trainable = False
         if trg_layer.name==to_layer:
             break
@@ -108,7 +109,7 @@ model.compile(optimizer=keras.optimizers.Adam(learning_rate=base_learning_rate),
 model.summary()
 #%%
 # fit new model!
-callback = EarlyStopping(monitor='loss', patience=3)
+callback = EarlyStopping(monitor='loss', patience=4)
 history = model.fit(train_data, 
                     epochs=10,
                     validation_data=test_data, 
@@ -140,5 +141,5 @@ plt.title('Training and Validation Loss')
 plt.xlabel('epoch')
 plt.show()
 
-model.save(datadir+'-data/saved_models/')
+model.save(datadir+'-data/saved_models/low-dropout')
 # %%
