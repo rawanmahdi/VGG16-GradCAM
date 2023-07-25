@@ -1,8 +1,11 @@
 #%%
 import tensorflow as tf
+from keras.preprocessing.image import ImageDataGenerator
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt 
+from mpl_toolkits.axes_grid1 import ImageGrid
+from keras.applications.vgg16 import VGG16
 #%%
 class GradCAM:
   def __init__(self, model, classIdx, layerName=None):
@@ -67,19 +70,40 @@ def build_heatmap(model, img, predictedClass, layerName, classIdx=None,
   return heatmap
 
 #%%
-model_path = 'C:/Users/Rawan Alamily/Downloads/McSCert Co-op/VGG16-GradCAM-data/saved_models/saved_model4'
-model = tf.keras.models.load_model(model_path)
-model.summary()
+model = VGG16(weights='imagenet')
+model.save('C:/Users/Rawan Alamily/Downloads/McSCert Co-op/VGG16-GradCAM-data/saved_models/vgg16')
 #%%
-img_path = 'C:/Users/Rawan Alamily/Downloads/McSCert Co-op/VGG16-GradCAM-data/reduced-cat-breed/TRAIN/bengal/portrait-bengal-kitten-cat-looking-260nw-1930915121.jpg'
-img = tf.keras.utils.load_img(img_path, target_size=(224,224))
-plt.imshow(img)
-
+tab_gen = ImageDataGenerator()
+data = tab_gen.flow_from_directory('C:/Users/Rawan Alamily/Downloads/McSCert Co-op/VGG16-GradCAM-data/TEST',
+                                              batch_size=1,
+                                              target_size=(224,224))
 #%%
-heatmap = build_heatmap(model, img=img, predictedClass=2, layerName='block5_pool')
+imgdir = 'C:/Users/Rawan Alamily/Downloads/McSCert Co-op/VGG16-GradCAM-data/400-3-cat-breeds/TEST/'
+modeldir = 'C:/Users/Rawan Alamily/Downloads/McSCert Co-op/VGG16-GradCAM-data/saved_models'
+imgs = []
+maps = []
+preds = []
+# for gen in [tab_gen, per_gen, sia_gen]:
+for i in range(4):
+  img, label = data.next()
+  print(label)
+  for model_name in ['/overfitted/400-sample-7layer-100-52', '/overfitted/400-sample-256bs-75dropout-88-86',
+                    '/overfitted/400-sample-256bs-100-85', '/overfitted/400-sample-dropout-98-80', '/vgg16']:
+    model = tf.keras.models.load_model(modeldir+model_name)
+    pred = np.argmax(model.predict(img))
+    heatmap = build_heatmap(model, img=tf.squeeze(img), predictedClass=pred, layerName='block5_pool')
+    preds.append(pred)
+    imgs.append(img)
+    maps.append(heatmap)
+#%%
+fig = plt.figure(figsize=(24,24), frameon=False)
+grid = ImageGrid(fig, 111,
+                nrows_ncols=(4,5),
+                axes_pad=0.3)
 extent = 0,224,0,224
-fig = plt.figure(frameon=False)
-plt.imshow(img, extent=extent)
-plt.imshow(heatmap, cmap=plt.cm.viridis, alpha=0.65, extent=extent)
+for i in range(4*5):
+  grid[i].imshow(np.squeeze(imgs[i]).astype(np.uint8), extent=extent)
+  grid[i].imshow(maps[i], cmap=plt.cm.viridis, alpha=0.65, extent=extent)
+  grid[i].set_title(f"Predicted {preds[i]}")
+
 plt.show()
-# %%
