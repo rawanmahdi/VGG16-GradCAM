@@ -15,12 +15,10 @@ base_model.summary()
 # load train and test images using generator
 train_gen = ImageDataGenerator()
 datadir = 'C:/Users/Rawan Alamily/Downloads/McSCert Co-op/VGG16-GradCAM-data'
-train_data = train_gen.flow_from_directory(directory=datadir+'/400-3-cat-breeds/TRAIN', target_size=(224,224), batch_size=64)
+train_data = train_gen.flow_from_directory(directory=datadir+'/400-3-cat-breeds-noise/TRAIN', target_size=(224,224), batch_size=64)
 test_gen = ImageDataGenerator()
-test_data = test_gen.flow_from_directory(directory=datadir+'/400-3-cat-breeds/TEST', target_size=(224,224), batch_size=256)
-#%%
-# freeze conv layers of model below top layer - we dont want to update weights of the entire model
-base_model.trainable = False
+test_data = test_gen.flow_from_directory(directory=datadir+'/400-3-cat-breeds-noise/TEST', target_size=(224,224), batch_size=64)
+
 #%%
 # EXACT REPLICA OF VGG16 ARCHITECTURE
 img_input = Input(shape=(224,224,3))
@@ -78,19 +76,20 @@ x = MaxPooling2D((2, 2), strides=(2, 2), name="block5_pool")(x)
 # trainable layers
 x = (Flatten())(x)
 x = Dense(units=4096,activation="relu")(x)
-# x = Dropout(0.75)(x)
+# x = Dropout(0.4)(x)
 x = Dense(units=4096,activation="relu")(x)
-# x = Dropout(0.75)(x)
+# x = Dropout(0.4)(x)
 x = Dense(units=3)(x)
 
 model = training.Model(img_input, x, name="custom_vgg16")
 
 #%%
 def transfer_weights(src_model, trg_model, to_layer):
-
     for trg_layer, src_layer in zip(trg_model.layers, src_model.layers):
+        # copy weights from source model layer to target model layer
         weights = src_layer.get_weights()
         trg_layer.set_weights(weights)
+        # turn off training for layer
         trg_layer.trainable = False
         if trg_layer.name==to_layer:
             break
@@ -136,5 +135,6 @@ plt.title('Training and Validation Loss')
 plt.xlabel('epoch')
 plt.show()
 #%%
-model.save(datadir+'/saved_models/overfitted/400-sample-7layer-100-52')
+model.save(datadir+'/saved_models/overfitted/400-noise-40dropout-7layer-98-30')
 # %%
+ 
