@@ -54,20 +54,11 @@ class GradCAM:
   
 
 
-def build_heatmap(model, img, predictedClass, layerName, classIdx=None,
-                    activation_of_truth=True):
+def build_heatmap(model, img, predictedClass, layerName):
   # get heatmap
-  if activation_of_truth:
-    Idx = classIdx
-    if Idx == None:
-      Idx = predictedClass
-  else:
-    Idx = predictedClass
-
-  heatmapBuilder = GradCAM(model, Idx, layerName)
+  heatmapBuilder = GradCAM(model, predictedClass, layerName)
   heatmap = heatmapBuilder.get_gradcam_heatmap(img)
   heatmap = cv2.resize(heatmap, (224, 224))
-
   return heatmap
 
 model = VGG16(weights='imagenet')
